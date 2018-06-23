@@ -22,6 +22,9 @@ Always_Callback=['securecheck']
 Maximum_Trial=5
 Delay=7
 
+#Callback Settings
+listignore=[Err401,Err404,Err500,Maximum_Trial_Redirect,'Server.py','Generate_Filelist.py']
+
 #Callbacks
 def generatefilelist(Folder):
     start='''<html>
@@ -35,8 +38,11 @@ def generatefilelist(Folder):
 <hr>
 <p>Files available:</p>
 '''
+    listignore=[Err401,Err404,Err500,Maximum_Trial_Redirect,'Server.py','Generate_Filelist.py']
     TempDir=os.listdir(os.getcwd())
     for x in TempDir:
+        if x in listignore:
+            continue
         if '/'+x in PublicSite:
             start=start+'<p><a href=/'+x+'>'+x+'</a> (Public)</p>\n'
         else:
