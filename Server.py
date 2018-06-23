@@ -1,25 +1,72 @@
+#在任意Callback中返回STOP,服务器将自动停止响应
+
+#imports
 from socket import *
 import os
 import base64
 import _thread
 import time
 
+
+#配置
 Err404='/404.html'
 Err401='/Unauthorized.html'
 Err500='/Syserr.html'
+Maximum_Trial_Redirect='/Max.html'
+PublicSite=['/','/welcome.html','/welcome.txt']
 AuthName='Unsecured File Access System (UFAS)'
 UserList={'yyj':'yyj','admin2':'admin'}
-Redirect={'/':'/index.html'}
-Callback={'/index.html':'callbacktest'}
+Redirect={'/':'/welcome.html'}
+Callback={'/server.py':'secure','/welcome.html':'generatefilelist'}
+Always_Callback=['securecheck']
 Maximum_Trial=5
 Delay=7
-Maximum_Trial_Redirect='/Max.html'
 
-def send_response(header,filename):
+#Callbacks
+def generatefilelist(Folder):
+    start='''<html>
+<head>
+<meta charset='utf-8'>
+</head>
+<body>
+<title>File Center - UFAS</title>
+</b>Welcome to Lincoln Yan's File Server.</b>
+<br>Acroading to permission settings, you may need to sign in to access some files</br>
+<hr>
+<p>Files available:</p>
+'''
+    TempDir=os.listdir(os.getcwd())
+    for x in TempDir:
+        if '/'+x in PublicSite:
+            start=start+'<p><a href=/'+x+'>'+x+'</a> (Public)</p>\n'
+        else:
+            start=start+'<p><a href=/'+x+'>'+x+'</a> (Private)</p>\n'
+    start=start+'</body></html>'
+    header='HTTP/1.1 200 OK\n\n'
+    send_response(header,'',DirectContent=start)
+    return 'STOP'
+
+def callbacktest(RequestedUrl):
+    print('this is a callback test!!')
+    print('Requested Url:'+RequestedUrl)
+    print('now redirecting to: /reqs.py')
+    return '/reqs.py'
+
+def securecheck(RequestedUrl):
+    return RequestedUrl.lower()
+
+def secure(r):
+    return Err401
+
+#系统自带!
+def send_response(header,filename,DirectContent=None):
     try:
-        f = open(filename[1:])
-        outputdata = f.read()
-        f.close()
+        if DirectContent!=None:
+            outputdata=DirectContent
+        else:
+            f = open(filename[1:])
+            outputdata = f.read()
+            f.close()
         connectionSocket.send(header.encode('utf-8'))
         for i in range(0,len(outputdata)):
             connectionSocket.send(outputdata[i].encode('utf-8'))
@@ -52,6 +99,15 @@ def send_response(header,filename):
                 return()
 
 def getfilename(filename):
+    for x in Always_Callback:
+        try:
+            Result=eval(x+'(\''+filename+'\')')
+            if Result!=None and Result!='STOP':
+                filename=Result
+            if Result=='STOP':
+                return 'STOP'
+        except:
+            print('Unable to callback:(Always_Callback) '+x)
     for x in Redirect:
         if filename==x:
             filename=Redirect[filename]
@@ -71,12 +127,6 @@ def delay():
     Trial=0
     _thread.exit_thread()
 
-def callbacktest(RequestedUrl):
-    print('this is a callback test!!')
-    print('Requested Url:'+RequestedUrl)
-    print('now redirecting to: /reqs.py')
-    return '/reqs.py'
-
 serverSocket = socket(AF_INET,SOCK_STREAM)
 serverSocket.bind(('',80))
 serverSocket.listen(5)
@@ -90,6 +140,12 @@ while True:
     connectionSocket, addr = serverSocket.accept()
     try:
         message = connectionSocket.recv(1024)
+        msgs=message.split()
+        if msgs[1].decode('utf-8') in PublicSite:
+            filename = getfilename(msgs[1].decode('utf-8'))
+            header = 'HTTP/1.1 200 OK\n\n'
+            send_response(header,filename)
+            continue
         Trial=Trial+1
         if Trial>Maximum_Trial and Maximum_Trial!=0:
             header = 'HTTP/1.1 200 OK\n\n'
@@ -97,7 +153,6 @@ while True:
             send_response(header,filename)
         header = 'HTTP/1.1 401 Unauthorized\n'+AuthMsg+'\n\n'
         filename = Err401
-        msgs=message.split()
         for x in range(len(msgs)):
             if msgs[x].decode('utf-8')=='Authorization:':
                 if msgs[x+1].decode('utf-8')=='Basic':
@@ -111,4 +166,5 @@ while True:
     except Exception:
         header = '\nHTTP/1.1 500 Server Error\n\n'
         filename = Err500
-    send_response(header,filename)
+    if filename!='STOP':
+        send_response(header,filename)
