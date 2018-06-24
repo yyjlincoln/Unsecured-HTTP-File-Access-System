@@ -189,7 +189,7 @@ while True:
         msgs=message.split()
         print(msgs[1].decode('utf-8'))
         if parse.unquote(msgs[1].decode('utf-8')) in PublicSite:
-            filename = getfilename(msgs[1].decode('utf-8'))
+            filename = getfilename(parse.unquote(msgs[1].decode('utf-8')))
             header = 'HTTP/1.1 200 OK\n\n'
             send_response(header,filename)
             continue
@@ -205,7 +205,7 @@ while True:
                 if msgs[x+1].decode('utf-8')=='Basic':
                     if msgs[x+2].decode('utf-8') in Password_encode:
                         header='\nHTTP/1.1 200 OK\n\n'
-                        filename = getfilename(msgs[1].decode('utf-8'))
+                        filename = getfilename(parse.unquote(msgs[1].decode('utf-8')))
                         Trial=0
                         break
         if Trial==Maximum_Trial:
