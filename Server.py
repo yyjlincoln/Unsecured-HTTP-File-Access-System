@@ -13,13 +13,13 @@ from urllib import parse
 #配置
 Err404='/404.html'
 Err401='/Unauthorized.html'
+Err403='/Blocked.html'
 Err500='/Syserr.html'
 Maximum_Trial_Redirect='/Max.html'
 PublicSite=['/','/welcome.html','/welcome.txt']
 AuthName='Unsecured File Access System (UFAS)'
 UserList={'yyj':'yyj','admin2':'admin'}
 Redirect={'/':'/welcome.html'}
-Callback={'/server.py':'secure'}
 Always_Callback=['securecheck','chinesedetect','filelist']
 After_Callback=['modecheck']
 Maximum_Trial=5
@@ -70,9 +70,9 @@ def generatefilelist(Folder):
 <p>Files available ('''+'/'+Folder[1:]+'):</p>'
     TempDir=os.listdir(os.path.join(os.getcwd(),Folder[1:]))
     for x in TempDir:
-        if '/'+x in listignore:
+        if Folder+'/'+x in listignore:
             continue
-        if '/'+x in PublicSite:
+        if Folder+'/'+x in PublicSite:
             start=start+'<p><a href='+parse.quote(Folder)+'/'+parse.quote(x)+'>'+x+'</a> (Public)</p>\n'
         else:
             start=start+'<p><a href='+parse.quote(Folder)+'/'+parse.quote(x)+'>'+x+'</a> (Private)</p>\n'
@@ -89,11 +89,11 @@ def callbacktest(RequestedUrl):
 
 def securecheck(RequestedUrl):
     try:
-        return RequestedUrl.lower()
+        if RequestedUrl.lower()=='server.py':
+            return Err403
+        return RequestedUrl
     except:
         return RequestedUrl
-def secure(r):
-    return Err401
 
 #系统自带!
 def send_response(header,filename,OpenMode='r',DirectContent=None):
