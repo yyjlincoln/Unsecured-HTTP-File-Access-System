@@ -27,7 +27,7 @@ Maximum_Trial=5
 Delay=7
 
 #Callback Settings
-listignore=[Err401,Err404,Err500,Maximum_Trial_Redirect,'/Server.py']
+listignore=[Err401,Err404,Err403,Err500,Maximum_Trial_Redirect,'/Server.py']
 
 #Callbacks
 def chinesedetect(Rq):
