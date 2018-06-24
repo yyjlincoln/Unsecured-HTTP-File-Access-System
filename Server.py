@@ -37,7 +37,7 @@ def modecheck(Rq):
         for x in Redirect:
             if Rq==x:
                 Rq=Redirect[Rq]
-        hd='HTTP/1.1 200 OK\nContent-Type:Others/Others\n\n'
+        hd='HTTP/1.1 200 OK\nContent-Type:Files/Others\n\n'
         send_response(hd,Rq,'rb')
         return 'STOP'
 
@@ -73,8 +73,10 @@ def callbacktest(RequestedUrl):
     return '/reqs.py'
 
 def securecheck(RequestedUrl):
-    return RequestedUrl.lower()
-
+    try:
+        return RequestedUrl.lower()
+    except:
+        return RequestedUrl
 def secure(r):
     return Err401
 
