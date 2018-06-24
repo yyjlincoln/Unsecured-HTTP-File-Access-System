@@ -22,6 +22,7 @@ UserList={'yyj':'yyj','admin2':'admin'}
 Redirect={'/':'/welcome.html'}
 Always_Callback=['securecheck','chinesedetect','filelist']
 After_Callback=['modecheck']
+Callback={}
 Maximum_Trial=5
 Delay=7
 
