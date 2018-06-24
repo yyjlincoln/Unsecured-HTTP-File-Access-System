@@ -64,8 +64,7 @@ def generatefilelist(Folder):
 </head>
 <body>
 <title>File Center - UFAS</title>
-</b>Welcome to Lincoln Yan's File Server.</b>
-<br>Acroading to permission settings, you may need to sign in to access some files</br>
+</b><font size="5pt">Lincoln Yan's File Server.</font></b>
 <hr>
 <p>Files available ('''+'/'+Folder[1:]+'):</p>'
     TempDir=os.listdir(os.path.join(os.getcwd(),Folder[1:]))
