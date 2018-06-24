@@ -7,6 +7,7 @@ import base64
 import _thread
 import time
 import struct
+from urllib import parse
 
 
 #配置
@@ -18,8 +19,8 @@ PublicSite=['/','/welcome.html','/welcome.txt']
 AuthName='Unsecured File Access System (UFAS)'
 UserList={'yyj':'yyj','admin2':'admin'}
 Redirect={'/':'/welcome.html'}
-Callback={'/server.py':'secure','/welcome.html':'generatefilelist'}
-Always_Callback=['securecheck']
+Callback={'/server.py':'secure'}
+Always_Callback=['securecheck','chinesedetect','filelist']
 After_Callback=['modecheck']
 Maximum_Trial=5
 Delay=7
@@ -28,6 +29,21 @@ Delay=7
 listignore=[Err401,Err404,Err500,Maximum_Trial_Redirect,'/Server.py']
 
 #Callbacks
+def chinesedetect(Rq):
+    if parse.unquote(Rq)!=Rq:
+        return parse.unquote(Rq)
+    else:
+        return Rq
+
+def filelist(Rq):
+    if Rq=='/':
+        generatefilelist('')
+        return 'STOP'
+    if os.path.isdir(os.path.join(os.getcwd(),Rq[1:])):
+        generatefilelist(Rq)
+        return 'STOP'
+    else:
+        print('File/No file list generated')
 def modecheck(Rq):
     try:
         with open(Rq[1:],'r') as f:
@@ -51,16 +67,15 @@ def generatefilelist(Folder):
 </b>Welcome to Lincoln Yan's File Server.</b>
 <br>Acroading to permission settings, you may need to sign in to access some files</br>
 <hr>
-<p>Files available:</p>
-'''
-    TempDir=os.listdir(os.getcwd())
+<p>Files available ('''+'/'+Folder[1:]+'):</p>'
+    TempDir=os.listdir(os.path.join(os.getcwd(),Folder[1:]))
     for x in TempDir:
         if '/'+x in listignore:
             continue
         if '/'+x in PublicSite:
-            start=start+'<p><a href=/'+x+'>'+x+'</a> (Public)</p>\n'
+            start=start+'<p><a href='+prase.quote(Folder)+'/'+x+'>'+x+'</a> (Public)</p>\n'
         else:
-            start=start+'<p><a href=/'+x+'>'+x+'</a> (Private)</p>\n'
+            start=start+'<p><a href='+prase.quote(Folder)+'/'+x+'>'+x+'</a> (Private)</p>\n'
     start=start+'</body></html>'
     header='HTTP/1.1 200 OK\n\n'
     send_response(header,'',DirectContent=start)
@@ -172,6 +187,7 @@ while True:
     try:
         message = connectionSocket.recv(1024)
         msgs=message.split()
+        print(msgs[1].decode('utf-8'))
         if msgs[1].decode('utf-8') in PublicSite:
             filename = getfilename(msgs[1].decode('utf-8'))
             header = 'HTTP/1.1 200 OK\n\n'
