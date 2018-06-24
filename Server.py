@@ -6,6 +6,7 @@ import os
 import base64
 import _thread
 import time
+import struct
 
 
 #配置
@@ -19,6 +20,7 @@ UserList={'yyj':'yyj','admin2':'admin'}
 Redirect={'/':'/welcome.html'}
 Callback={'/server.py':'secure','/welcome.html':'generatefilelist'}
 Always_Callback=['securecheck']
+After_Callback=['modecheck']
 Maximum_Trial=5
 Delay=7
 
@@ -26,6 +28,19 @@ Delay=7
 listignore=[Err401,Err404,Err500,Maximum_Trial_Redirect,'/Server.py']
 
 #Callbacks
+def modecheck(Rq):
+    try:
+        with open(Rq[1:],'r') as f:
+            f.read()
+            return Rq
+    except:
+        for x in Redirect:
+            if Rq==x:
+                Rq=Redirect[Rq]
+        hd='HTTP/1.1 200 OK\nContent-Type:Others/Others\n\n'
+        send_response(hd,Rq,'rb')
+        return 'STOP'
+
 def generatefilelist(Folder):
     start='''<html>
 <head>
@@ -64,17 +79,22 @@ def secure(r):
     return Err401
 
 #系统自带!
-def send_response(header,filename,DirectContent=None):
+def send_response(header,filename,OpenMode='r',DirectContent=None):
+    if filename=='STOP':
+        return
     try:
         if DirectContent!=None:
             outputdata=DirectContent
         else:
-            f = open(filename[1:])
+            f = open(filename[1:],OpenMode)
             outputdata = f.read()
             f.close()
         connectionSocket.send(header.encode('utf-8'))
-        for i in range(0,len(outputdata)):
-            connectionSocket.send(outputdata[i].encode('utf-8'))
+        if OpenMode=='r':
+            for i in range(0,len(outputdata)):
+                connectionSocket.send(outputdata[i].encode('utf-8'))
+        else:
+            connectionSocket.send(outputdata)
         connectionSocket.close()
     except:
         try:
@@ -124,6 +144,10 @@ def getfilename(filename):
                     filename=Result
             except:
                 print('Unable to callback:'+Callback[x])
+    for x in After_Callback:
+        Result=eval(x+'(\''+filename+'\')')
+        if Result!=None:
+            filename=Result
     return filename
 
 def delay():
@@ -171,5 +195,4 @@ while True:
     except Exception:
         header = '\nHTTP/1.1 500 Server Error\n\n'
         filename = Err500
-    if filename!='STOP':
-        send_response(header,filename)
+    send_response(header,filename)
