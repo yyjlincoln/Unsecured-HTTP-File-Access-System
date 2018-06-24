@@ -73,9 +73,9 @@ def generatefilelist(Folder):
         if '/'+x in listignore:
             continue
         if '/'+x in PublicSite:
-            start=start+'<p><a href='+prase.quote(Folder)+'/'+x+'>'+x+'</a> (Public)</p>\n'
+            start=start+'<p><a href='+parse.quote(Folder)+'/'+parse.quote(x)+'>'+x+'</a> (Public)</p>\n'
         else:
-            start=start+'<p><a href='+prase.quote(Folder)+'/'+x+'>'+x+'</a> (Private)</p>\n'
+            start=start+'<p><a href='+parse.quote(Folder)+'/'+parse.quote(x)+'>'+x+'</a> (Private)</p>\n'
     start=start+'</body></html>'
     header='HTTP/1.1 200 OK\n\n'
     send_response(header,'',DirectContent=start)
@@ -188,7 +188,7 @@ while True:
         message = connectionSocket.recv(1024)
         msgs=message.split()
         print(msgs[1].decode('utf-8'))
-        if msgs[1].decode('utf-8') in PublicSite:
+        if parse.unquote(msgs[1].decode('utf-8')) in PublicSite:
             filename = getfilename(msgs[1].decode('utf-8'))
             header = 'HTTP/1.1 200 OK\n\n'
             send_response(header,filename)
