@@ -20,7 +20,7 @@ PublicSite=['/','/welcome.html','/welcome.txt']
 AuthName='Unsecured File Access System (UFAS)'
 UserList={'yyj':'yyj','admin2':'admin'}
 Redirect={'/':'/welcome.html'}
-Always_Callback=['securecheck','chinesedetect','filelist']
+Always_Callback=['securecheck','filelist']
 After_Callback=['modecheck']
 Callback={}
 Maximum_Trial=5
@@ -30,12 +30,6 @@ Delay=7
 listignore=[Err401,Err404,Err403,Err500,Maximum_Trial_Redirect,'/Server.py']
 
 #Callbacks
-def chinesedetect(Rq):
-    if parse.unquote(Rq)!=Rq:
-        return parse.unquote(Rq)
-    else:
-        return Rq
-
 def filelist(Rq):
     if Rq=='/':
         generatefilelist('')
